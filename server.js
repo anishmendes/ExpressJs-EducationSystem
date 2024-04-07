@@ -2,51 +2,59 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Dummy data for students
+let students = [
+    { id: 1, name: 'Anish Mainali', age: 20, grade: 'A' },
+    { id: 2, name: 'Sahil Newar', age: 22, grade: 'B' },
+    { id: 3, name: 'MR BOB', age: 21, grade: 'A-' }
+];
+
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
-// Dummy data
-let students = [];
-let teachers = [];
-let classes = [];
-
 // Routes
-app.get('/', (req, res) => {
-    res.render('index');
-});
 
-// Students
+// Display all students
 app.get('/students', (req, res) => {
     res.render('students', { students });
 });
 
+// Show form to add a new student
+app.get('/students/new', (req, res) => {
+    res.render('new-student');
+});
+
+// Create a new student
 app.post('/students', (req, res) => {
-    const newStudent = req.body;
-    students.push(newStudent);
+    const { name, age, grade } = req.body;
+    const id = students.length > 0 ? students[students.length - 1].id + 1 : 1;
+    students.push({ id, name, age, grade });
     res.redirect('/students');
 });
 
-// Teachers
-app.get('/teachers', (req, res) => {
-    res.render('teachers', { teachers });
+// Show form to edit a student
+app.get('/students/:id/edit', (req, res) => {
+    const student = students.find(student => student.id === parseInt(req.params.id));
+    if (!student) return res.status(404).send('Student not found.');
+    res.render('edit-student', { student });
 });
 
-app.post('/teachers', (req, res) => {
-    const newTeacher = req.body;
-    teachers.push(newTeacher);
-    res.redirect('/teachers');
+// Update a student
+app.put('/students/:id', (req, res) => {
+    const { name, age, grade } = req.body;
+    const student = students.find(student => student.id === parseInt(req.params.id));
+    if (!student) return res.status(404).send('Student not found.');
+    student.name = name;
+    student.age = age;
+    student.grade = grade;
+    res.redirect('/students');
 });
 
-// Classes
-app.get('/classes', (req, res) => {
-    res.render('classes', { classes });
-});
-
-app.post('/classes', (req, res) => {
-    const newClass = req.body;
-    classes.push(newClass);
-    res.redirect('/classes');
+// Delete a student
+app.delete('/students/:id', (req, res) => {
+    students = students.filter(student => student.id !== parseInt(req.params.id));
+    res.redirect('/students');
 });
 
 // Start server
